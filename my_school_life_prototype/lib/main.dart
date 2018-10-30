@@ -3,6 +3,8 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'login_page.dart';
+import 'register_page.dart';
 
 void main() => runApp(new MyApp());
 
@@ -10,6 +12,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    var routes = <String, WidgetBuilder> {
+      RegisterPage.routeName: (BuildContext context) => new RegisterPage(pageTitle: "Register")
+    };
+
     return new MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
@@ -24,7 +30,8 @@ class MyApp extends StatelessWidget {
         // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.red,
       ),
-      home: new MyHomePage(title: 'My School Life'),
+      home: LoginPage(),
+      routes: routes,
     );
   }
 }
