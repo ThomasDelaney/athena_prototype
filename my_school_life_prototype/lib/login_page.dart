@@ -85,15 +85,15 @@ class _LoginPageState extends State<LoginPage> {
             child: new ListView(
               shrinkWrap: true,
               padding: EdgeInsets.only(left: 25.0, right: 25.0),
-            children: <Widget>[
-              email,
-              SizedBox(height: 30.0),
-              password,
-              SizedBox(height: 30.0),
-              loginButton,
-              SizedBox(height: 30.0),
-              registerButton
-            ]
+              children: <Widget>[
+                email,
+                SizedBox(height: 30.0),
+                password,
+                SizedBox(height: 30.0),
+                loginButton,
+                SizedBox(height: 30.0),
+                registerButton
+              ]
           )
         )
       );
@@ -120,6 +120,8 @@ class _LoginPageState extends State<LoginPage> {
     String id = "";
     String firstName = "";
     String secondName = "";
+    String token = "";
+    String refresh = "";
 
     if (response['response'] != null){
       message = json.decode(response['response'])['error']['message'];
@@ -128,6 +130,8 @@ class _LoginPageState extends State<LoginPage> {
       id = response['id'];
       firstName = response['message']['firstName'];
       secondName = response['message']['secondName'];
+      token = response['token'];
+      refresh = response['refreshToken'];
     }
 
     if (message == "INVALID_EMAIL"){
@@ -143,14 +147,14 @@ class _LoginPageState extends State<LoginPage> {
     AlertDialog responseDialog = new AlertDialog(
       content: new Text(message),
       actions: <Widget>[
-        new FlatButton(onPressed: () => handleDialog(message, id, firstName, secondName), child: new Text("OK"))
+        new FlatButton(onPressed: () => handleDialog(message, id, firstName, secondName, token, refresh), child: new Text("OK"))
       ],
     );
 
     showDialog(context: context, barrierDismissible: false, builder: (_) => responseDialog);
   }
 
-  void handleDialog(String message, String id, String firstName, String secondName) async
+  void handleDialog(String message, String id, String firstName, String secondName, String token, String refreshToken) async
   {
     if (message != "Success"){
       Navigator.pop(context);
@@ -159,9 +163,8 @@ class _LoginPageState extends State<LoginPage> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString("name", firstName+" "+secondName);
       await prefs.setString("id", id);
+      await prefs.setString("refreshToken", refreshToken);
 
-      print("ITS BEEN PLOTTED: "+prefs.getString("name"));
-      
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => new HomePage(pageTitle: firstName+" "+secondName)), (Route<dynamic> route) => false);
     }
   }

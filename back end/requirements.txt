@@ -2,3 +2,4 @@ Flask==1.0.2
 gunicorn==19.9.0
 Pyrebase==3.0.27
 Requests==2.20.0
+google-api-python-client
