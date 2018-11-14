@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'login_page.dart';
 import 'register_page.dart';
 import 'home_page.dart';
+import 'file_viewer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
     var routes = <String, WidgetBuilder> {
       RegisterPage.routeName: (BuildContext context) => new RegisterPage(pageTitle: "Register"),
       LoginPage.routeName: (BuildContext context) => new LoginPage(pageTitle: "MyStudentLife"),
-      HomePage.routeName: (BuildContext context) => new HomePage(pageTitle: name)
+      HomePage.routeName: (BuildContext context) => new HomePage(pageTitle: name),
     };
 
     return new MaterialApp(

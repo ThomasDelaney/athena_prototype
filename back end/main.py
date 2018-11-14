@@ -5,6 +5,7 @@ import logging
 import json
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+import random
 
 app = Flask(__name__)
 
@@ -54,11 +55,46 @@ def upload_photo():
 
 	try:
 		storage = firebase.storage()
+		db = firebase.database()
 
 		user = auth.refresh(request.form['refreshToken'])
 
 		results = storage.child("users").child(user['userId']).child(request.files['file'].filename).put(request.files['file'], user['idToken'])
-		return jsonify(message="Success")
+		url = storage.child(results['name']).get_url(results['downloadTokens'])
+
+		data = {
+		    "url": str(url)
+		}
+
+		name = results['name'].split('/').split('.')
+
+		print(name)
+
+		print(name[len(name)-1])
+
+		addUrl = db.child("users").child(user['userId']).child("images").child(str(random.randint(1,101))).set(data, user['idToken'])
+
+		print(user)
+
+		return jsonify(refreshToken=user['refreshToken'], url=url)
+	except requests.exceptions.HTTPError as e:
+		new = str(e).replace("\n", '')
+		parsedError = new[new.index("{"):]
+		return jsonify(response=parsedError)
+
+@app.route('/photos', methods=['GET'])
+def get_photos():
+	auth = firebase.auth()
+
+	try:
+		storage = firebase.storage()
+		db = firebase.database()
+
+		user = auth.refresh(request.args['refreshToken'])
+
+		results = db.child("users").child(user['userId']).child("images").get(user['idToken'])
+
+		return jsonify(images=results.val(), refreshToken=user['refreshToken'])
 	except requests.exceptions.HTTPError as e:
 		new = str(e).replace("\n", '')
 		parsedError = new[new.index("{"):]

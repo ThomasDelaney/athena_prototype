@@ -6,6 +6,10 @@ import 'login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:transparent_image/transparent_image.dart';
+import 'package:photo_view/photo_view.dart';
+import 'file_viewer.dart';
+import 'package:flutter_advanced_networkimage/flutter_advanced_networkimage.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.pageTitle}) : super(key: key);
@@ -19,7 +23,30 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  List<File> imageFiles = new List<File>();
+  List<String> imageFiles = new List<String>();
+  bool submitting = false;
+  Dio dio = new Dio();
+
+  void getImages() async
+  {
+    List<String> reqImages = new List<String>();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String url = "http://mystudentlife-220716.appspot.com/photos";
+    Response response = await dio.get(url, data: {"id":await prefs.getString("id"), "refreshToken": await prefs.getString("refreshToken")});
+
+    for (var value in response.data['images'].values) {
+      reqImages.add(value['url']);
+    }
+    
+    this.setState((){imageFiles = reqImages;});
+  }
+
+  void initState() {
+
+    imageFiles.clear();
+    getImages();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +87,28 @@ class _HomePageState extends State<HomePage> {
               margin: new EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 10.0),
               child: new SizedBox(
                 child: new Card(
-                   child: new Image.file(imageFiles[index], fit: BoxFit.cover),
+                   child: new Stack(
+                     children: <Widget>[
+                       Center(child: CircularProgressIndicator(),),
+                       Center(
+                         child: GestureDetector(
+                          // When the child is tapped, show a snackbar
+                          onTap:() {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => FileViewer(list: imageFiles, i: index)));
+                          },
+                          child: new Hero(
+                              tag: "imageView"+index.toString(),
+                              child: new TransitionToImage((
+                                 fit: BoxFit.cover,
+                                   height: 150.0,
+                                   width: 150.0,
+                                   placeholder: kTransparentImage,
+                                   image: imageFiles[index]
+                                 ))
+                        ),
+                       ),
+                     ],
+                   )
                 ),
                 width: 150.0,
                 height: 150.0,
@@ -82,31 +130,43 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        body: new Container(
-              alignment: Alignment.bottomCenter,
-              child: new Column(
-                mainAxisSize: MainAxisSize.min,
+        body: LayoutBuilder(
+          builder: (context, constraints) =>
+              Stack(
+                fit: StackFit.expand,
                 children: <Widget>[
-                  new Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                      new IconButton(
-                        color: Colors.red,
-                        icon: Icon(Icons.image, size: 35.0),
-                        onPressed: () => getImage(),
-                      ),
-                      new IconButton(
-                        color: Colors.red,
-                        icon: Icon(Icons.camera_alt, size: 35.0),
-                        onPressed: () => getCameraImage(),
-                      )
-                    ]
+                  new Container(
+                    alignment: Alignment.center,
+                    child: submitting ? new SizedBox(width: 50.0, height: 50.0, child: new CircularProgressIndicator(strokeWidth: 5.0,)) : new Container()
                   ),
-                imageList,
-                ],
+                  new Container(
+                  alignment: Alignment.bottomCenter,
+                  child: new Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          new Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                new IconButton(
+                                  color: Colors.red,
+                                  icon: Icon(Icons.image, size: 35.0),
+                                  onPressed: () => getImage(),
+                                ),
+                                new IconButton(
+                                  color: Colors.red,
+                                  icon: Icon(Icons.camera_alt, size: 35.0),
+                                  onPressed: () => getCameraImage(),
+                                )
+                              ]
+                          ),
+                          imageList,
+                        ],
+                      ),
+                    )
+                  ]
+                 ),
               )
-            ),
-    );
+        );
 
     return page;
   }
@@ -115,9 +175,11 @@ class _HomePageState extends State<HomePage> {
   {
     File image = await ImagePicker.pickImage(source: ImageSource.camera);
 
+    String url = await uploadPhoto(image);
+
     setState(() {
       if (image != null) {
-        imageFiles.add(image);
+        imageFiles.add(url);
       }
     });
   }
@@ -126,11 +188,11 @@ class _HomePageState extends State<HomePage> {
   {
     File image = await ImagePicker.pickImage(source: ImageSource.gallery);
 
-    await uploadPhoto(image);
+    String url = await uploadPhoto(image);
 
     setState(() {
       if (image != null) {
-          imageFiles.add(image);
+          imageFiles.add(url);
         }
     });
   }
@@ -165,16 +227,37 @@ class _HomePageState extends State<HomePage> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    Dio dio = new Dio();
-
     FormData formData = new FormData.from({
       "id": await prefs.getString("id"),
       "refreshToken": await prefs.getString("refreshToken"),
-      "file": new UploadFileInfo(file, file.path.split('/').last)
+      "file": new UploadFileInfo(file, new DateTime.now().millisecondsSinceEpoch.toString()+file.path.split('/').last)
     });
 
-    var response = await dio.post(url, data: formData);
+    submit(true);
 
-    print(response.data);
+    var responseObj = await dio.post(url, data: formData);
+
+    if(responseObj.data['refreshToken'] == null) {
+        AlertDialog errorDialog = new AlertDialog(
+        content: new Text("An Error Occured! Please Try Again"),
+        actions: <Widget>[
+          new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+        ],
+      );
+
+      showDialog(context: context, barrierDismissible: false, builder: (_) => errorDialog);
+    }
+    else {
+        await prefs.setString("refreshToken", responseObj.data['refreshToken']);
+        submit(false);
+        return responseObj.data['url'];
+    }
+  }
+
+  void submit(bool state)
+  {
+    setState(() {
+      submitting = state;
+    });
   }
 }
