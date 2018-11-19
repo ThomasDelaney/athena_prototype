@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class FileViewer extends StatefulWidget
 {
@@ -19,7 +20,7 @@ class _FileViewerState extends State<FileViewer>
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Hero(tag: "imageView"+widget.i.toString(), child: Image.network(widget.list[widget.i])),
+      child: Hero(tag: "imageView"+widget.i.toString(), child: CachedNetworkImage(imageUrl: widget.list[widget.i])),
     );
   }
 }

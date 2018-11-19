@@ -6,11 +6,16 @@ import json
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import random
+from google.cloud import speech
+from google.cloud.speech import enums
+from google.cloud.speech import types
 
 app = Flask(__name__)
 
 
+
 firebase = pyrebase.initialize_app(config)
+client = speech.SpeechClient()
 
 @app.route('/register', methods=['POST'])
 def register_user():
@@ -99,6 +104,20 @@ def get_photos():
 		new = str(e).replace("\n", '')
 		parsedError = new[new.index("{"):]
 		return jsonify(response=parsedError)
+
+
+@app.route('/command', methods=['POST'])
+def get_command_keywords():
+	try:
+		audio = request.files['file']
+
+
+		return jsonify(images=results.val(), refreshToken=user['refreshToken'])
+	except requests.exceptions.HTTPError as e:
+		new = str(e).replace("\n", '')
+		parsedError = new[new.index("{"):]
+		return jsonify(response=parsedError)
+
 
 
 if __name__ == '__main__':

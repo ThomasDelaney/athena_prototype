@@ -9,7 +9,8 @@ import 'package:dio/dio.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'file_viewer.dart';
-import 'package:flutter_advanced_networkimage/flutter_advanced_networkimage.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.pageTitle}) : super(key: key);
@@ -24,8 +25,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   List<String> imageFiles = new List<String>();
+  FlutterSound flutterSound = new FlutterSound();
   bool submitting = false;
   Dio dio = new Dio();
+  bool isPlaying = false;
+  String uri = "";
+  StreamSubscription<RecordStatus> audioSubscription = null;
 
   void getImages() async
   {
@@ -43,7 +48,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void initState() {
-
     imageFiles.clear();
     getImages();
   }
@@ -89,7 +93,6 @@ class _HomePageState extends State<HomePage> {
                 child: new Card(
                    child: new Stack(
                      children: <Widget>[
-                       Center(child: CircularProgressIndicator(),),
                        Center(
                          child: GestureDetector(
                           // When the child is tapped, show a snackbar
@@ -98,13 +101,14 @@ class _HomePageState extends State<HomePage> {
                           },
                           child: new Hero(
                               tag: "imageView"+index.toString(),
-                              child: new TransitionToImage((
-                                 fit: BoxFit.cover,
-                                   height: 150.0,
-                                   width: 150.0,
-                                   placeholder: kTransparentImage,
-                                   image: imageFiles[index]
-                                 ))
+                              child: CachedNetworkImage(
+                                placeholder: CircularProgressIndicator(),
+                                imageUrl: imageFiles[index],
+                                height: 150.0,
+                                width: 150.0,
+                                fit: BoxFit.cover
+                              ),
+                          ),
                         ),
                        ),
                      ],
@@ -125,7 +129,13 @@ class _HomePageState extends State<HomePage> {
           actions: <Widget>[
             // action button
             IconButton(
+              icon: Icon(Icons.mic),
+              iconSize: 30.0,
+              onPressed: () => recordAudio(),
+            ),
+            IconButton(
               icon: Icon(Icons.exit_to_app),
+              iconSize: 30.0,
               onPressed: () => signOut(),
             ),
           ],
@@ -182,6 +192,36 @@ class _HomePageState extends State<HomePage> {
         imageFiles.add(url);
       }
     });
+  }
+
+  void recordAudio() async
+  {
+    if (this.isPlaying == false) {
+      print("here");
+      this.uri =  await flutterSound.startRecorder(null);
+      audioSubscription = flutterSound.onRecorderStateChanged.listen((e) {
+        if (e != null) {
+          this.setState(() {
+            this.isPlaying = true;
+          });
+        }
+      });
+    }
+    else {
+      String result = await flutterSound.stopRecorder();
+      print('stopRecorder: $result');
+
+      if (audioSubscription != null) {
+        audioSubscription.cancel();
+        audioSubscription = null;
+
+        await flutterSound.startPlayer(this.uri);
+
+        this.setState(() {
+          this.isPlaying = false;
+        });
+      }
+    }
   }
 
   void getImage() async
