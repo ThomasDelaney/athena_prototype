@@ -11,6 +11,7 @@ import 'package:photo_view/photo_view.dart';
 import 'file_viewer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_youtube/flutter_youtube.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.pageTitle}) : super(key: key);
@@ -31,6 +32,8 @@ class _HomePageState extends State<HomePage> {
   bool isPlaying = false;
   String uri = "";
   StreamSubscription<RecordStatus> audioSubscription = null;
+  String function = "";
+  String day = "";
 
   void getImages() async
   {
@@ -146,6 +149,10 @@ class _HomePageState extends State<HomePage> {
                 fit: StackFit.expand,
                 children: <Widget>[
                   new Container(
+                      alignment: Alignment.center,
+                      child: new Text(function+ " - " +day, style: new TextStyle(fontSize: 35.0))
+                  ),
+                  new Container(
                     alignment: Alignment.center,
                     child: submitting ? new SizedBox(width: 50.0, height: 50.0, child: new CircularProgressIndicator(strokeWidth: 5.0,)) : new Container()
                   ),
@@ -215,12 +222,66 @@ class _HomePageState extends State<HomePage> {
         audioSubscription.cancel();
         audioSubscription = null;
 
-        await flutterSound.startPlayer(this.uri);
+        String url = "http://mystudentlife-220716.appspot.com/command";
 
-        this.setState(() {
-          this.isPlaying = false;
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        File file = new File.fromUri(new Uri.file(this.uri));
+
+        print(file.path);
+        List<int> lol = file.readAsBytesSync();
+
+        print(lol.length);
+
+        FormData formData = new FormData.from({
+          "id": await prefs.getString("id"),
+          "refreshToken": await prefs.getString("refreshToken"),
+          "file": new UploadFileInfo(file, this.uri),
         });
+
+        var responseObj = null;
+
+        try
+        {
+          responseObj = await dio.post(url, data: formData);
+        }
+        on DioError catch(e)
+        {
+          print("error");
+          File currentAudio = File.fromUri(new Uri.file(this.uri));
+          currentAudio.deleteSync();
+
+          this.setState(() {
+            this.isPlaying = false;
+          });
+        }
+
+        File currentAudio = File.fromUri(new Uri.file(this.uri));
+        currentAudio.deleteSync();
+
+        if(responseObj.data['function'] == null) {
+          AlertDialog errorDialog = new AlertDialog(
+            content: new Text("An Error Occured! Please Try Again"),
+            actions: <Widget>[
+              new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+            ],
+          );
+
+          print(responseObj.data['response']);
+
+          showDialog(context: context, barrierDismissible: false, builder: (_) => errorDialog);
+        }
+        else {
+          this.setState(() {
+            this.day = responseObj.data['day'];
+            this.function = responseObj.data['function'];
+          });
+        }
       }
+
+      this.setState(() {
+        this.isPlaying = false;
+      });
     }
   }
 

@@ -4,3 +4,8 @@ Pyrebase==3.0.27
 Requests==2.20.0
 google-api-python-client
 google-cloud-speech
+pydub
+SpeechRecognition==3.8.1
+dialogflow
+protobuf==3.6.1
+datetime
