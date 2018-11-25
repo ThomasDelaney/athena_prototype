@@ -7,6 +7,7 @@ import 'login_page.dart';
 import 'register_page.dart';
 import 'home_page.dart';
 import 'file_viewer.dart';
+import 'timetable_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

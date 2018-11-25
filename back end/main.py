@@ -16,7 +16,6 @@ import datetime
 app = Flask(__name__)
 
 
-
 firebase = pyrebase.initialize_app(config)
 client = speech_v1.SpeechClient()
 r = sr.Recognizer()
@@ -76,7 +75,10 @@ def upload_photo():
 		    "url": str(url)
 		}
 
-		name = results['name'].split('/').split('.')
+		print(results['name'])
+
+		fullFilename = results['name'].split('/')
+		name = fullFilename[len(fullFilename) - 1].split('.')[1]
 
 		addUrl = db.child("users").child(user['userId']).child("images").child(str(random.randint(1,101))).set(data, user['idToken'])
 
@@ -116,6 +118,8 @@ def get_command_keywords():
 		with sr.AudioFile(wav_path) as source:
 			audio = r.record(source)
 
+
+
 		day = ""
 		funct = ""
 
@@ -123,19 +127,10 @@ def get_command_keywords():
 		    text = r.recognize_google_cloud(audio, credentials_json=GOOGLE_CLOUD_SPEECH_CREDENTIALS)
 
 		    session = session_client.session_path("mystudentlife-220716", "1")
-
-		    print('Session path: {}\n'.format(session))
-
 		    text_input = dialogflow.types.TextInput(text=text, language_code="en-US")
-
 		    query_input = dialogflow.types.QueryInput(text=text_input)
 
 		    response = session_client.detect_intent(session=session, query_input=query_input)
-
-		    print('Query text: {}'.format(response.query_result.query_text))
-
-		    print('Detected intent: {} (confidence: {})\n'.format(response.query_result.intent.display_name, response.query_result.intent_detection_confidence))
-
 		    responseObject = MessageToDict(response)
 
 		    payload = responseObject['queryResult']['fulfillmentMessages'][1]['payload']
@@ -143,7 +138,6 @@ def get_command_keywords():
 		    funct = payload['function']
 
 		    dayInfo = payload['date'].split('-')
-
 		    date = datetime.date(int(dayInfo[0]), int(dayInfo[1]), int(dayInfo[2]))
 
 		    day = date.strftime("%A")
