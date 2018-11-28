@@ -13,6 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'timetable_page.dart';
 import 'package:file_picker/file_picker.dart';
+import 'font_settings.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.pageTitle}) : super(key: key);
@@ -49,8 +50,10 @@ class _HomePageState extends State<HomePage> {
     String url = "http://mystudentlife-220716.appspot.com/photos";
     Response response = await dio.get(url, data: {"id": await prefs.getString("id"), "refreshToken": await prefs.getString("refreshToken")});
 
-    for (var value in response.data['images'].values) {
-      reqImages.add(value['url']);
+    if (response.data['images']?.values != null) {
+      for (var value in response.data['images'].values) {
+        reqImages.add(value['url']);
+      }
     }
 
     this.setState((){imageFiles = reqImages; imagesLoaded = true;});
@@ -79,7 +82,13 @@ class _HomePageState extends State<HomePage> {
                     width: imageSize,
                     height: imageSize,
                     child: new Card(
-                      child: new Text("Add Photos and Videos!"),
+                      child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          new Text("Add Photos and Videos!", textAlign: TextAlign.center,),
+                          new Icon(Icons.cloud_upload, size: 40.0, color: Colors.grey,)
+                        ]
+                      ),
                  ),
                 )
               ),
@@ -187,23 +196,16 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              child: Text('Drawer Header'),
+              child: Text('Settings', style: TextStyle(fontSize: 25.0)),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.red,
               ),
             ),
             ListTile(
-              title: Text('Item 1'),
+              leading: Icon(Icons.font_download),
+              title: Text('Fonts', style: TextStyle(fontSize: 20.0)),
               onTap: () {
-                // Update the state of the app
-                // ...
-              },
-            ),
-            ListTile(
-              title: Text('Item 2'),
-              onTap: () {
-                // Update the state of the app
-                // ...
+                Navigator.push(context, MaterialPageRoute(builder: (context) => FontSettings()));
               },
             ),
           ],
@@ -244,10 +246,6 @@ class _HomePageState extends State<HomePage> {
                   child: textFileList,
                 ),
                 new Container(
-                  alignment: Alignment.center,
-                  child: submitting ? new SizedBox(width: 50.0, height: 50.0, child: new CircularProgressIndicator(strokeWidth: 5.0,)) : new Container()
-                ),
-                new Container(
                 alignment: Alignment.bottomCenter,
                 child: new Column(
                       mainAxisSize: MainAxisSize.min,
@@ -279,8 +277,19 @@ class _HomePageState extends State<HomePage> {
                         children: <Widget>[
                           new Container(
                             margin: MediaQuery.of(context).padding,
-                            child: new ModalBarrier(color: Colors.black54, dismissible: false,)),
-                          recordingCard],) : new Container()
+                            child: new ModalBarrier(color: Colors.black54, dismissible: false,)), recordingCard],) : new Container()
+                  ),
+                  new Container(
+                      alignment: Alignment.center,
+                      child: submitting ? new Stack(
+                        alignment: Alignment.center,
+                        children: <Widget>[
+                          new Container(
+                              margin: MediaQuery.of(context).padding,
+                              child: new ModalBarrier(color: Colors.black54, dismissible: false,)), new SizedBox(width: 50.0, height: 50.0, child: new CircularProgressIndicator(strokeWidth: 5.0,))
+                        ],
+                      )
+                          : new Container()
                   ),
                 ]
                ),
@@ -293,33 +302,37 @@ class _HomePageState extends State<HomePage> {
   void getImage() async
   {
     String image = await FilePicker.getFilePath(type: FileType.IMAGE);
-    //File image = await ImagePicker.pickImage(source: ImageSource.gallery);
 
-    String url = await uploadPhoto(image);
+    if (image != null) {
+      String url = await uploadPhoto(image);
 
-    setState(() {
-      if (image != null) {
-        imageFiles.add(url);
-      }
-    });
+      setState(() {
+        if (image != null) {
+          imageFiles.add(url);
+        }
+      });
+    }
   }
 
   void getCameraImage() async
   {
-    /*
-    File image = await ImagePicker.pickImage(source: ImageSource.camera);
+    String image = await FilePicker.getFilePath(type: FileType.CAPTURE);;
 
-    String url = await uploadPhoto(image);
+    if (image != null) {
+      String url = await uploadPhoto(image);
 
-    setState(() {
-      if (image != null) {
-        imageFiles.add(url);
-      }
-    });*/
+      setState(() {
+        if (image != null) {
+          imageFiles.add(url);
+        }
+      });
+    }
   }
 
   void showCannotUnderstandError()
   {
+    cancelRecording();
+
     AlertDialog cannotUnderstand = new AlertDialog(
       content: new Text("Sorry, I could not understand you! Please try again"),
       actions: <Widget>[

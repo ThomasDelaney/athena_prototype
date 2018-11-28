@@ -16,6 +16,7 @@ import datetime
 app = Flask(__name__)
 
 
+
 firebase = pyrebase.initialize_app(config)
 client = speech_v1.SpeechClient()
 r = sr.Recognizer()
@@ -118,7 +119,7 @@ def get_command_keywords():
 		with sr.AudioFile(wav_path) as source:
 			audio = r.record(source)
 
-
+		
 
 		day = ""
 		funct = ""
@@ -147,6 +148,23 @@ def get_command_keywords():
 		    print("Could not request results from Google Cloud Speech service; {0}".format(e))
 
 		return jsonify(function=funct, day=day)
+	except requests.exceptions.HTTPError as e:
+		new = str(e).replace("\n", '')
+		parsedError = new[new.index("{"):]
+		return jsonify(response=parsedError)
+
+
+@app.route('/font', methods=['POST'])
+def put_font():
+	auth = firebase.auth()
+
+	try:
+		user = auth.refresh(request.form['refreshToken'])
+
+		db = firebase.database()
+
+		result = db.child("users").child(user['localId']).child("design").child("font").push(request.form['font'], user['idToken'])
+		return jsonify(message="Success", refreshToken=user['refreshToken'])
 	except requests.exceptions.HTTPError as e:
 		new = str(e).replace("\n", '')
 		parsedError = new[new.index("{"):]
