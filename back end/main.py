@@ -16,7 +16,6 @@ import datetime
 app = Flask(__name__)
 
 
-
 firebase = pyrebase.initialize_app(config)
 client = speech_v1.SpeechClient()
 r = sr.Recognizer()
@@ -76,8 +75,6 @@ def upload_photo():
 		    "url": str(url)
 		}
 
-		print(results['name'])
-
 		fullFilename = results['name'].split('/')
 		name = fullFilename[len(fullFilename) - 1].split('.')[1]
 
@@ -119,7 +116,7 @@ def get_command_keywords():
 		with sr.AudioFile(wav_path) as source:
 			audio = r.record(source)
 
-		
+
 
 		day = ""
 		funct = ""
@@ -163,8 +160,8 @@ def put_font():
 
 		db = firebase.database()
 
-		result = db.child("users").child(user['localId']).child("design").child("font").push(request.form['font'], user['idToken'])
-		return jsonify(message="Success", refreshToken=user['refreshToken'])
+		result = db.child("users").child(user['userId']).child("design").child("font").set(request.form['font'], user['idToken'])
+		return jsonify(refreshToken=user['refreshToken'])
 	except requests.exceptions.HTTPError as e:
 		new = str(e).replace("\n", '')
 		parsedError = new[new.index("{"):]
