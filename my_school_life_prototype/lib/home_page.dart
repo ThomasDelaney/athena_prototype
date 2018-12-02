@@ -41,6 +41,7 @@ class _HomePageState extends State<HomePage> {
   bool imagesLoaded = false;
   List<String> textFiles = const <String>["Algebra Notes", "Formulas for Standard Deviation", "Trigonometry Friday Notes", "Hint for Next Weeks test", "Probability cheat sheet", "Formulas for Algebra"];
   double imageSize = 150.0;
+  String font = "";
 
   void getImages() async
   {
@@ -58,6 +59,12 @@ class _HomePageState extends State<HomePage> {
 
     this.setState((){imageFiles = reqImages; imagesLoaded = true;});
   }
+  
+  void getFont() async
+  {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    this.setState((){font = prefs.getString("font");});
+  }
 
   void initState() {
     imageFiles.clear();
@@ -66,6 +73,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    getFont();
 
     Container imageList;
 
@@ -85,7 +94,7 @@ class _HomePageState extends State<HomePage> {
                       child: new Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          new Text("Add Photos and Videos!", textAlign: TextAlign.center,),
+                          new Text("Add Photos and Videos!", textAlign: TextAlign.center, style: TextStyle(fontFamily: font),),
                           new Icon(Icons.cloud_upload, size: 40.0, color: Colors.grey,)
                         ]
                       ),
@@ -152,7 +161,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Padding(padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 15.0), child: new Text("Recording", textAlign: TextAlign.center, textScaleFactor: 1.5,)),
+            Padding(padding: EdgeInsets.symmetric(vertical: 0.0, horizontal: 15.0), child: new Text("Recording", textAlign: TextAlign.center, textScaleFactor: 1.5, style: TextStyle(fontFamily: font),)),
             recorderLoading ?
             IconButton(
               iconSize: 80.0,
@@ -182,7 +191,7 @@ class _HomePageState extends State<HomePage> {
             ),
             title: Text(
               textFiles[position],
-              style: TextStyle(fontSize: 20.0),
+              style: TextStyle(fontSize: 20.0, fontFamily: font),
             ),
           ),
         );
@@ -196,23 +205,30 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              child: Text('Settings', style: TextStyle(fontSize: 25.0)),
+              child: Text('Settings', style: TextStyle(fontSize: 25.0, fontFamily: font)),
               decoration: BoxDecoration(
                 color: Colors.red,
               ),
             ),
             ListTile(
               leading: Icon(Icons.font_download),
-              title: Text('Fonts', style: TextStyle(fontSize: 20.0)),
+              title: Text('Fonts', style: TextStyle(fontSize: 20.0, fontFamily: font)),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => FontSettings()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.exit_to_app),
+              title: Text('Sign Out', style: TextStyle(fontSize: 20.0, fontFamily: font)),
+              onTap: () {
+                signOut();
               },
             ),
           ],
         ),
       ),
       appBar: new AppBar(
-        title: new Text(widget.pageTitle),
+        title: new Text(widget.pageTitle, style: TextStyle(fontFamily: font),),
         actions: recording ? <Widget>[
           // action button
           IconButton(
@@ -334,9 +350,9 @@ class _HomePageState extends State<HomePage> {
     cancelRecording();
 
     AlertDialog cannotUnderstand = new AlertDialog(
-      content: new Text("Sorry, I could not understand you! Please try again"),
+      content: new Text("Sorry, I could not understand you! Please try again", style: TextStyle(fontFamily: font),),
       actions: <Widget>[
-        new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+        new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK", style: TextStyle(fontFamily: font),))
       ],
     );
 
@@ -346,9 +362,9 @@ class _HomePageState extends State<HomePage> {
   void showErrorDialog()
   {
     AlertDialog errorDialog = new AlertDialog(
-      content: new Text("An Error has occured. Please try again"),
+      content: new Text("An Error has occured. Please try again", style: TextStyle(fontFamily: font),),
       actions: <Widget>[
-        new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+        new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK", style: TextStyle(fontFamily: font),))
       ],
     );
 
@@ -434,9 +450,9 @@ class _HomePageState extends State<HomePage> {
 
             if (!weekdays.contains(responseObj.data['day'])) {
               AlertDialog cannotUnderstand = new AlertDialog(
-                content: new Text("You don't have any classes for this day"),
+                content: new Text("You don't have any classes for this day", style: TextStyle(fontFamily: font),),
                 actions: <Widget>[
-                  new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+                  new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK", style: TextStyle(fontFamily: font)))
                 ],
               );
 
@@ -465,9 +481,9 @@ class _HomePageState extends State<HomePage> {
   void signOut()
   {
     AlertDialog signOutDialog = new AlertDialog(
-      content: new Text("You are about to be Signed Out"),
+      content: new Text("You are about to be Signed Out", style: TextStyle(fontFamily: font)),
       actions: <Widget>[
-        new FlatButton(onPressed: () => handleSignOut(), child: new Text("OK"))
+        new FlatButton(onPressed: () => handleSignOut(), child: new Text("OK", style: TextStyle(fontFamily: font)))
       ],
     );
 
@@ -505,9 +521,9 @@ class _HomePageState extends State<HomePage> {
 
       if(responseObj.data['refreshToken'] == null) {
         AlertDialog errorDialog = new AlertDialog(
-          content: new Text("An Error Occured! Please Try Again"),
+          content: new Text("An Error Occured! Please Try Again", style: TextStyle(fontFamily: font)),
           actions: <Widget>[
-            new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+            new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK", style: TextStyle(fontFamily: font)))
           ],
         );
 

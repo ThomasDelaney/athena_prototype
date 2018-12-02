@@ -28,7 +28,6 @@ class _FileViewerState extends State<FileViewer>
               return new PhotoView(
                   maxScale: PhotoViewComputedScale.contained * 2.0,
                   minScale: (PhotoViewComputedScale.contained) * 0.5,
-                  //initialScale: 1.0,
                   imageProvider: new CachedNetworkImageProvider(widget.list[index]));
             },
             itemCount: widget.list.length,

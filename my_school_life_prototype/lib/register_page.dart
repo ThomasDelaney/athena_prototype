@@ -241,7 +241,6 @@ class _RegisterPageState extends State<RegisterPage> {
     String reply = await response.transform(utf8.decoder).join();
     httpClient.close();
     submit(false);
-    print(reply);
     return reply;
   }
 }

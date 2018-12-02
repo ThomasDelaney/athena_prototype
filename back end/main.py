@@ -15,7 +15,6 @@ import datetime
 
 app = Flask(__name__)
 
-
 firebase = pyrebase.initialize_app(config)
 client = speech_v1.SpeechClient()
 r = sr.Recognizer()
@@ -115,8 +114,6 @@ def get_command_keywords():
 
 		with sr.AudioFile(wav_path) as source:
 			audio = r.record(source)
-
-
 
 		day = ""
 		funct = ""

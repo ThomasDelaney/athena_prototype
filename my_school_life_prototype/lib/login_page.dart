@@ -114,8 +114,6 @@ class _LoginPageState extends State<LoginPage> {
 
     Map<String, dynamic> response = json.decode(await signInRequest(url, map));
 
-    print(response);
-
     String message = "";
     String id = "";
     String firstName = "";

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'dart:io';
 
 class FontSettings extends StatefulWidget {
   @override
@@ -10,13 +13,25 @@ class FontSettings extends StatefulWidget {
 class _FontSettingsState extends State<FontSettings> {
 
   String currentFont = "";
+  bool uploadingFont = false;
+  Dio dio = new Dio();
+
+
+  void initState() {
+    getCurrentFont();
+  }
+
+  void getCurrentFont() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      currentFont = prefs.getString("font");
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-
     bool recording = false;
-
-    print(currentFont);
 
     final page = Scaffold(
         endDrawer: new Drawer(
@@ -95,15 +110,84 @@ class _FontSettingsState extends State<FontSettings> {
                     elevation: 4.0,
                     splashColor: Colors.blueGrey,
                     onPressed: () {
-
+                      this.currentFont == "" ? Scaffold.of(context).showSnackBar(new SnackBar(content: Text('Please Choose a new Font!'))) : changeFont(context);
                     },
                   )
               ),
+              new Container(
+                  alignment: Alignment.center,
+                  child: uploadingFont ? new Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      new Container(
+                          margin: MediaQuery.of(context).padding,
+                          child: new ModalBarrier(color: Colors.black54, dismissible: false,)), new SizedBox(width: 50.0, height: 50.0, child: new CircularProgressIndicator(strokeWidth: 5.0,))
+                    ],
+                  )
+                  : new Container()
+              ),
             ],
           ),
-        )
+        ),
     );
 
     return page;
+  }
+
+  void changeFont(BuildContext _context) async
+  {
+    String url = "http://mystudentlife-220716.appspot.com/font";
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    FormData formData = new FormData.from({
+      "id": await prefs.getString("id"),
+      "refreshToken": await prefs.getString("refreshToken"),
+      "font": currentFont
+    });
+
+    submit(true);
+
+    try {
+      var responseObj = await dio.post(url, data: formData);
+
+      if(responseObj.data['refreshToken'] == null) {
+        print(responseObj.data['response']);
+
+        showErrorDialog();
+      }
+      else {
+        await prefs.setString("refreshToken", responseObj.data['refreshToken']);
+        await prefs.setString("font", currentFont);
+        Scaffold.of(_context).showSnackBar(new SnackBar(content: Text('Font Updated!!')));
+        submit(false);
+      }
+    }
+    on DioError catch(e)
+    {
+      print(e);
+      showErrorDialog();
+    }
+  }
+
+  void submit(bool state)
+  {
+    setState(() {
+      uploadingFont = state;
+    });
+  }
+
+  void showErrorDialog()
+  {
+    submit(false);
+
+    AlertDialog errorDialog = new AlertDialog(
+      content: new Text("An Error has occured. Please try again"),
+      actions: <Widget>[
+        new FlatButton(onPressed: () {Navigator.pop(context);}, child: new Text("OK"))
+      ],
+    );
+
+    showDialog(context: context, barrierDismissible: false, builder: (_) => errorDialog);
   }
 }
