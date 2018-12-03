@@ -1,44 +1,33 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
-import 'dart:async';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'login_page.dart';
 import 'register_page.dart';
 import 'home_page.dart';
-import 'file_viewer.dart';
-import 'timetable_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(new MyApp());
 }
 
+//this is the main class of the Application, it is what runs when the app is launched
 class MyApp extends StatelessWidget {
   String name = "";
 
-  // This widget is the root of your application.
+  // This widget is the root of the application.
+  //build runs every time the page is rendered
   @override
   Widget build(BuildContext context) {
 
+    //map of routes to different pages
     var routes = <String, WidgetBuilder> {
       RegisterPage.routeName: (BuildContext context) => new RegisterPage(pageTitle: "Register"),
-      LoginPage.routeName: (BuildContext context) => new LoginPage(pageTitle: "MyStudentLife"),
+      LoginPage.routeName: (BuildContext context) => new LoginPage(pageTitle: "Athena"),
       HomePage.routeName: (BuildContext context) => new HomePage(pageTitle: name),
     };
 
     return new MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Athena',
       debugShowCheckedModeBanner: false,
       theme: new ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or press Run > Flutter Hot Reload in IntelliJ). Notice that the
-        // counter didn't reset back to zero; the application is not restarted.
         primarySwatch: Colors.red,
       ),
       routes: routes,
@@ -61,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
 
+    //get user's name from shared preferences, and check if it is null, if so, then send user to log in page, else send user to homepage and pass in the user's name
     SharedPreferences.getInstance().then((SharedPreferences sp)
     {
       if(sp.getString("name") == null) {

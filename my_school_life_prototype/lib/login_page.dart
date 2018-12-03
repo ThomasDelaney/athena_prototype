@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
 
+//class to display and handle the log in page
 class LoginPage extends StatefulWidget {
   LoginPage({Key key, this.pageTitle}) : super(key: key);
 
@@ -17,9 +18,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
+  //text editing controllers, used to retrieve the text entered by the user in a text form field
   final emailController = new TextEditingController();
   final passwordController = new TextEditingController();
 
+  //method to change the text in the email and password input boxes
   void updateText(String newEmail, String newPass)
   {
     setState(() {
@@ -30,6 +34,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context){
+
+    //text input field for the user's email
     final email = new TextFormField(
       keyboardType: TextInputType.emailAddress,
       autofocus: false,
@@ -43,6 +49,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
 
+    //text input field for the user's password
     final password = new TextFormField(
       autofocus: false,
       controller: passwordController,
@@ -56,6 +63,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
 
+    //button to submit the log in details
     final loginButton = ButtonTheme(
         minWidth: 30.0,
         height: 46.0,
@@ -66,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
         )
     );
 
+    //button to route the user to the register page
     final registerButton = ButtonTheme(
         minWidth: 30.0,
         height: 46.0,
@@ -76,12 +85,13 @@ class _LoginPageState extends State<LoginPage> {
         )
     );
 
-
+    //scaffold to encapsulate all the widgets
     return new Scaffold(
           appBar: new AppBar(
           title: new Text(widget.pageTitle),
           ),
           body: new Center(
+            //stored in a listview for simple layout, will be changed later on
             child: new ListView(
               shrinkWrap: true,
               padding: EdgeInsets.only(left: 25.0, right: 25.0),
@@ -99,6 +109,7 @@ class _LoginPageState extends State<LoginPage> {
       );
     }
 
+  //route user to register screen and when the user returns, accept the user data from that page, and update the relevant text form fields
   Future<void> receiveUserData() async
   {
     var userInfo = await Navigator.pushNamed(context, RegisterPage.routeName);
@@ -106,12 +117,16 @@ class _LoginPageState extends State<LoginPage> {
     updateText(userJson['username'], userJson['password']);
   }
 
+  //method to submit user's log in data
   void signInUser(String email, String password) async
   {
+    //API URL for logging in
     String url = "http://mystudentlife-220716.appspot.com/signin";
 
+    //put the email and password into a map
     Map map = {"email": email, "password": password};
 
+    //make the sign in request and retrieve the response
     Map<String, dynamic> response = json.decode(await signInRequest(url, map));
 
     String message = "";
@@ -121,9 +136,11 @@ class _LoginPageState extends State<LoginPage> {
     String token = "";
     String refresh = "";
 
+    //if the response ['response']  is not null, then print the error message
     if (response['response'] != null){
       message = json.decode(response['response'])['error']['message'];
     }
+    //if null, then the request was a success, retrieve the information
     else{
       id = response['id'];
       firstName = response['message']['firstName'];
@@ -132,6 +149,7 @@ class _LoginPageState extends State<LoginPage> {
       refresh = response['refreshToken'];
     }
 
+    //parse the returned message, this could be error message such as invalid email
     if (message == "INVALID_EMAIL"){
       message = "This Email is Not Recognized!";
     }
@@ -142,6 +160,7 @@ class _LoginPageState extends State<LoginPage> {
       message = "Success";
     }
 
+    //display alertdialog with the returned message
     AlertDialog responseDialog = new AlertDialog(
       content: new Text(message),
       actions: <Widget>[
@@ -152,21 +171,26 @@ class _LoginPageState extends State<LoginPage> {
     showDialog(context: context, barrierDismissible: false, builder: (_) => responseDialog);
   }
 
+  //method called when the alert dialog for submitting log in information is displayed after the submission request is returned
   void handleDialog(String message, String id, String firstName, String secondName, String token, String refreshToken) async
   {
+    //if log in was not a success, pop the the dialog
     if (message != "Success"){
       Navigator.pop(context);
     }
+    //if successful, then store the users name, id, and refreshToken (used for authentication) in shared preferences for quick retrieval
     else{
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString("name", firstName+" "+secondName);
       await prefs.setString("id", id);
       await prefs.setString("refreshToken", refreshToken);
 
+      //pop all widgets currently on the stack, and route user to the homepage, and pass in their name
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => new HomePage(pageTitle: firstName+" "+secondName)), (Route<dynamic> route) => false);
     }
   }
 
+  //make the sign in request using the HttpClient Library, will be changed to adhere to the Dio library standard
   Future<String> signInRequest(String url, Map jsonMap) async
   {
     HttpClient httpClient = new HttpClient();
