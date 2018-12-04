@@ -3,7 +3,7 @@ Universally Design Mobile Application for Secondary School Students
 
 ## Where to find Dart code (front end):
 
-The Dart files can be found under my_school_life_prototype, in the lib folder.
+The Dart files can be found under **my_school_life_prototype**, in the **lib** folder.
 These files include:
 *	**File_viewer.dart** – Page used to display files so users can view them
 
@@ -22,7 +22,7 @@ These files include:
 *	**User.dart** – class to store user data, not actually used in the application, there to show how classes can be created in dart, will be used in final application
 
 ## Where to find back end code:
-The back end files can be found in the back end folder. 
+The back end files can be found in the **back end** folder. 
 Files include:
 *	**Main.py** – the python code using Flask that acts as the REST API back end to handle front end queries
 
